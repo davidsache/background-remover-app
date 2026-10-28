@@ -10,16 +10,24 @@ export const Settings: React.FC = () => {
 
   useEffect(() => {
     const storedModel = localStorage.getItem(STORED_MODEL_NAME);
-    if (storedModel && MODELS.has(storedModel)) setModel(storedModel);
-
+    if (storedModel && MODELS.has(storedModel)) {
+      setModel(storedModel);
+    }
+    
     const storedType = localStorage.getItem(STORED_TYPE_NAME);
-    if (storedType && TYPES.has(storedType)) setType(storedType);
+    if (storedType && TYPES.has(storedType)) {
+      setType(storedType);
+    }
 
     const storedFormat = localStorage.getItem(STORED_FORMAT_NAME);
-    if (storedFormat && FORMATS.has(storedFormat)) setFormat(storedFormat);
+    if (storedFormat && FORMATS.has(storedFormat)) {
+      setFormat(storedFormat);
+    }
 
     const storedQuality = localStorage.getItem(STORED_QUALITY_NAME);
-    if (storedQuality && !isNaN(Number(storedQuality))) setQuality(Number(storedQuality));
+    if (storedQuality && !isNaN(Number(storedQuality))) {
+      setQuality(Number(storedQuality));
+    }
   }, []);
 
   const handleModelChange = (value: string) => {
