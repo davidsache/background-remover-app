@@ -1,11 +1,13 @@
+import uploadImg from '../assets/upload.svg';
+import downloadImg from '../assets/download.svg';
+import processImg from '../assets/process.svg';
+
 import type { Config } from "@imgly/background-removal";
 import { useRef, useState, type ChangeEvent } from "react";
 import { PROCESS_MODES, type PROCESS_MODE } from "../constants/processors";
 import { STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
 import { FORMATS, MODELS, TYPES, type FORMAT_TYPES, type MODEL_TYPES } from "../constants/types";
-import uploadImg from '../assets/upload.svg';
-import downloadImg from '../assets/download.svg';
-import processImg from '../assets/process.svg';
+import { useModal } from "../context/ModalContext";
 
 interface ProcessingState {
   isProcessing: boolean;
@@ -24,6 +26,7 @@ export const ImageProcessor: React.FC = () => {
   const [status, setStatus] = useState<ProcessingState>({ isProcessing: false, progress: 0, stage: 'idle' });
   const [file, setFile] = useState<File | undefined>();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { openModal } = useModal();
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,7 +35,7 @@ export const ImageProcessor: React.FC = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Selected file must be an image.');
+      openModal({ title: 'Alert!', message: 'Selected file must be an image.' });
       return;
     }
 
@@ -62,8 +65,8 @@ export const ImageProcessor: React.FC = () => {
       setProcessedImage(resultUrl);
     }
     catch (error) {
-      console.error('Background removal failed:', error);
-      alert('Processing failed. Check console for details.');
+      console.error('Processing failed:', error);
+      openModal({ title: 'Background removal failed!', message: `${error}` });
     }
     finally {
       setStatus({ isProcessing: false, progress: 100, stage: 'complete' });
