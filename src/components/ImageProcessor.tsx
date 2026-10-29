@@ -28,14 +28,14 @@ export const ImageProcessor: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { openModal } = useModal();
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setFile(file);
 
     if (!file) return;
+    setFile(file);
 
-    if (!file.type.startsWith('image/')) {
-      openModal({ title: 'Alert!', message: 'Selected file must be an image.' });
+    if (!await validateImageSignature(file)) {
+      openModal({ title: 'Alert!', message: 'Selected file must be an image (.png, .jpeg or .webp).' });
       return;
     }
 
@@ -48,11 +48,33 @@ export const ImageProcessor: React.FC = () => {
     processImage(file);
   };
 
-  const processStoredImage = () => {
-    if (file) {
-      processImage(file);
+  const validateImageSignature = async (file: File): Promise<string | null> => {
+    const buffer = await file.slice(0, 12).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+
+    const hex = Array.from(bytes)
+      .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+      .join(' ');
+
+    // Checking if PNG
+    if (hex.startsWith('89 50 4E 47')) {
+      return 'image/png';
     }
-  };
+
+    // Checking if JPEG
+    if (hex.startsWith('FF D8 FF')) {
+      return 'image/jpeg';
+    }
+
+    // Checking if WebP
+    const isRiff = hex.slice(0, 11) === '52 49 46 46';
+    const isWebp = hex.slice(24, 35) === '57 45 42 50';
+    if (isRiff && isWebp) {
+      return 'image/webp';
+    }
+
+    return null;
+  }
   
   const processImage = async (file: File) => {
     setStatus({ isProcessing: true, progress: 0, stage: 'Initializing engine...' });
@@ -135,7 +157,7 @@ export const ImageProcessor: React.FC = () => {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept="image/*"
+        accept=".png, .jpg, .jpeg, .webp"
         className="hidden"
       />
 
@@ -150,7 +172,7 @@ export const ImageProcessor: React.FC = () => {
         </button>
         {originalImage && (
           <button
-            onClick={processStoredImage}
+            onClick={() => { if (file) processImage(file) }}
             disabled={status.isProcessing}
             className="inline-flex items-center gap-1 ms-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >
