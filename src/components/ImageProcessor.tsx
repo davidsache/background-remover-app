@@ -2,12 +2,14 @@ import uploadImg from '../assets/upload.svg';
 import downloadImg from '../assets/download.svg';
 import processImg from '../assets/process.svg';
 
-import type { Config } from "@imgly/background-removal";
+import { type Config } from "@imgly/background-removal";
 import { useRef, useState, type ChangeEvent } from "react";
 import { PROCESS_MODES, type PROCESS_MODE } from "../constants/processors";
-import { STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
-import { FORMATS, MODELS, TYPES, type FORMAT_TYPES, type MODEL_TYPES } from "../constants/types";
+import { STORED_DEVICE_NAME, STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
+import { DEVICES, FORMATS, MODELS, TYPES, type DEVICE_TYPES, type FORMAT_TYPES, type MODEL_TYPES } from "../constants/types";
 import { useModal } from "../context/ModalContext";
+import { checkWebGPUSupport } from '../utils/checkWebGPUSupport';
+import { getBaseConfig } from '../utils/getBaseConfig';
 
 interface ProcessingState {
   isProcessing: boolean;
@@ -78,7 +80,7 @@ export const ImageProcessor: React.FC = () => {
   
   const processImage = async (file: File) => {
     setStatus({ isProcessing: true, progress: 0, stage: 'Initializing engine...' });
-    const config = getConfig();
+    const config = await getConfig();
 
     try {
       const targetFunction = PROCESS_MODES[config.type as PROCESS_MODE];
@@ -95,12 +97,10 @@ export const ImageProcessor: React.FC = () => {
     }
   };
 
-  const getConfig = (): ProcessingConfig => {
+  const getConfig = async (): Promise<ProcessingConfig> => {
     const config: ProcessingConfig = {
       configuration: {
-        publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
-        debug: false,
-        model: 'isnet_fp16',
+        ...getBaseConfig(),
         output: {
           format: 'image/png',
           quality: 0.8
@@ -122,6 +122,11 @@ export const ImageProcessor: React.FC = () => {
     const storedFormat = localStorage.getItem(STORED_FORMAT_NAME);
     if (storedFormat && FORMATS.has(storedFormat)) {
       config.configuration.output!.format = storedFormat as FORMAT_TYPES;
+    }
+
+    const storedDevice = localStorage.getItem(STORED_DEVICE_NAME);
+    if (storedDevice && DEVICES.has(storedDevice)) {
+      config.configuration.device = await checkWebGPUSupport() ? storedDevice as DEVICE_TYPES : 'cpu';
     }
       
     const storedQuality = localStorage.getItem(STORED_QUALITY_NAME);

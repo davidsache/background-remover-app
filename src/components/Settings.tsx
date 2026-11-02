@@ -1,33 +1,39 @@
 import { useEffect, useState } from "react";
-import { STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
-import { FORMATS, MODELS, TYPES } from "../constants/types";
+import { STORED_DEVICE_NAME, STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
+import { DEVICES, FORMATS, MODELS, TYPES } from "../constants/types";
+import { checkWebGPUSupport } from "../utils/checkWebGPUSupport";
 
 export const Settings: React.FC = () => {
   const [model, setModel] = useState<string>('isnet_fp16');
   const [type, setType] = useState<string>('background');
   const [format, setFormat] = useState<string>('image/png');
   const [quality, setQuality] = useState<number>(0.5);
+  const [GPUSupported, setGPUSupported] = useState<boolean>(false);
+  const [device, setDevice] = useState<string>('cpu');
 
   useEffect(() => {
     const storedModel = localStorage.getItem(STORED_MODEL_NAME);
-    if (storedModel && MODELS.has(storedModel)) {
-      setModel(storedModel);
-    }
+    if (storedModel && MODELS.has(storedModel)) setModel(storedModel);
     
     const storedType = localStorage.getItem(STORED_TYPE_NAME);
-    if (storedType && TYPES.has(storedType)) {
-      setType(storedType);
-    }
+    if (storedType && TYPES.has(storedType)) setType(storedType);
 
     const storedFormat = localStorage.getItem(STORED_FORMAT_NAME);
-    if (storedFormat && FORMATS.has(storedFormat)) {
-      setFormat(storedFormat);
-    }
+    if (storedFormat && FORMATS.has(storedFormat)) setFormat(storedFormat);
+
+    const storedDevice = localStorage.getItem(STORED_DEVICE_NAME);
+    if (storedDevice && DEVICES.has(storedDevice)) setDevice(storedDevice);
 
     const storedQuality = localStorage.getItem(STORED_QUALITY_NAME);
-    if (storedQuality && !isNaN(Number(storedQuality))) {
-      setQuality(Number(storedQuality));
+    if (storedQuality && !isNaN(Number(storedQuality))) setQuality(Number(storedQuality));
+  }, []);
+
+  useEffect(() => {
+    const checkGPUSupport = async () => {
+      setGPUSupported(await checkWebGPUSupport());
     }
+
+    checkGPUSupport();
   }, []);
 
   const handleModelChange = (value: string) => {
@@ -49,6 +55,19 @@ export const Settings: React.FC = () => {
 
     setFormat(value);
     localStorage.setItem(STORED_FORMAT_NAME, value);
+  }
+
+  const handleDeviceChange = (value: string) => {
+    if (!DEVICES.has(value)) return;
+
+    if (!GPUSupported) {
+      setDevice('cpu');
+      localStorage.setItem(STORED_DEVICE_NAME, 'cpu');
+      return;
+    }
+
+    setDevice(value);
+    localStorage.setItem(STORED_DEVICE_NAME, value);
   }
 
   const handleQualityChange = (value: string) => {
@@ -111,6 +130,20 @@ export const Settings: React.FC = () => {
           <option value="image/png">PNG</option>
           <option value="image/webp">WEBP</option>
           <option value="image/jpeg">JPEG</option>
+        </select>
+      </div>
+
+      <div className="ms-4">
+        <label className="block text-center" htmlFor="device">Device</label>
+        <select 
+          id="device" 
+          disabled={!GPUSupported}
+          onChange={(e) => handleDeviceChange(e.target.value)}
+          className="bg-slate-700 border border-slate-500 hover:border-slate-400 hover:bg-slate-600 disabled:bg-slate-400 p-2 mt-1 text-center text-sm rounded-md cursor-pointer"
+          value={device}
+        >
+          <option value="cpu">CPU (WASM)</option>
+          <option value="gpu">GPU (WebGPU)</option>
         </select>
       </div>
 
