@@ -1,8 +1,7 @@
-import uploadImg from '../assets/upload.svg';
-import downloadImg from '../assets/download.svg';
-import processImg from '../assets/process.svg';
+import uploadSvg from '../assets/upload.svg';
+import downloadSvg from '../assets/download.svg';
+import processSvg from '../assets/process.svg';
 
-import { type Config } from "@imgly/background-removal";
 import { useCallback, useRef, useState } from "react";
 import { PROCESS_MODES, type PROCESS_MODE } from "../constants/processors";
 import { STORED_DEVICE_NAME, STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
@@ -11,17 +10,19 @@ import { useModal } from "../context/ModalContext";
 import { checkWebGPUSupport } from '../utils/checkWebGPUSupport';
 import { getBaseConfig } from '../utils/getBaseConfig';
 import { useGlobalPaste } from '../hooks/useGlobalPaste';
+import type { Config } from '@imgly/background-removal';
+import { getBlobMetadata, type ImageMetadata } from '../utils/imageMetadata';
+
+interface ProcessingConfig {
+  configuration: Config;
+  type: string;
+}
 
 interface ProcessingState {
   isProcessing: boolean;
   progress: number;
   stage: string;
-};
-
-interface ProcessingConfig {
-  configuration: Config;
-  type: string;
-};
+}
 
 export const ImageProcessor: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export const ImageProcessor: React.FC = () => {
   const [status, setStatus] = useState<ProcessingState>({ isProcessing: false, progress: 0, stage: 'idle' });
   const [file, setFile] = useState<File | undefined>();
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [resultMetadata, setResultMetadata] = useState<ImageMetadata | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { openModal } = useModal();
 
@@ -116,10 +118,14 @@ export const ImageProcessor: React.FC = () => {
   const processImage = async (file: File) => {
     setStatus({ isProcessing: true, progress: 0, stage: 'Initializing engine...' });
     const config = await getConfig();
+    setResultMetadata(null);
 
     try {
       const targetFunction = PROCESS_MODES[config.type as PROCESS_MODE];
       const blob = await targetFunction(file, config.configuration);
+      const meta = await getBlobMetadata(blob);
+
+      setResultMetadata(meta);
       setProcessedImage(URL.createObjectURL(blob));
     }
     catch (err: unknown) {
@@ -257,7 +263,7 @@ export const ImageProcessor: React.FC = () => {
                 {/* Drag Overlay Indicator */}
                 {isDragging && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-10 pointer-events-none">   
-                    <img src={uploadImg} alt="Upload" className="h-8 w-8 mb-2"/>
+                    <img src={uploadSvg} alt="Upload" className="h-8 w-8 mb-2"/>
                     <span className="text-xs font-mono text-white">Drop to replace</span>
                   </div>
                 )}
@@ -286,24 +292,44 @@ export const ImageProcessor: React.FC = () => {
 
           {/* Output buttons */}
           {processedImage && (
-            <div className="flex justify-center">
-              <button
-                onClick={() => { if (file) processImage(file) }}
-                disabled={status.isProcessing}
-                className="inline-flex items-center gap-1 me-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
-              >
-                <img src={processImg} alt="Process" className="w-5 h-5"/>
-                <span>Process Again</span>
-              </button>
-              <button
-                onClick={handleDownload}
-                disabled={status.isProcessing}
-                className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
-              >
-                <img src={downloadImg} alt="Download" className="w-5 h-5"/>
-                <span>Download Image</span>
-              </button>
-            </div>
+            <>
+              {resultMetadata && (
+                <div className="flex justify-center items-center mb-3">
+                  <span className="text-xs text-neutral-400 font-mono tracking-wider me-2">
+                    RESULT:
+                  </span>
+                  <div className="flex gap-2 text-xs font-mono text-neutral-400">
+                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded text-neutral-200">
+                      {resultMetadata.format}
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded">
+                      {resultMetadata.width} x {resultMetadata.height}
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded">
+                      {resultMetadata.sizeFormatted}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => { if (file) processImage(file) }}
+                  disabled={status.isProcessing}
+                  className="inline-flex items-center gap-1 me-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                >
+                  <img src={processSvg} alt="Process" className="w-5 h-5"/>
+                  <span>Process Again</span>
+                </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={status.isProcessing}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                >
+                  <img src={downloadSvg} alt="Download" className="w-5 h-5"/>
+                  <span>Download Image</span>
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}

@@ -5,7 +5,7 @@ import { useModal } from "../context/ModalContext";
 
 interface PreloadProps {
   preloadFinished: () => void;
-};
+}
 
 export const Preload: React.FC<PreloadProps> = ({ preloadFinished }) => {
   const [preloadStatus, setPreloadStatus] = useState<'idle' | 'loading' | 'loading' | 'ready' | 'error'>('idle');

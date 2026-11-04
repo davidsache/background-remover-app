@@ -11,9 +11,7 @@ interface ModalProps {
 export const Modal: React.FC<ModalProps> = ({ title, message, isOpen, onClose }) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape') onClose();
     }
 
     if (isOpen) {
@@ -33,9 +31,7 @@ export const Modal: React.FC<ModalProps> = ({ title, message, isOpen, onClose })
   if (!modalRoot) return null;
 
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   }
 
   return createPortal(
