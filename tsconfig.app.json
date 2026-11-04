@@ -7,6 +7,9 @@
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
+    "paths": {
+      "onnxruntime-web": ["./node_modules/onnxruntime-web/types.d.ts"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",

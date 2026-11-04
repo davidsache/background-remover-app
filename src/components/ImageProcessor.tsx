@@ -3,36 +3,39 @@ import downloadImg from '../assets/download.svg';
 import processImg from '../assets/process.svg';
 
 import { type Config } from "@imgly/background-removal";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useRef, useState } from "react";
 import { PROCESS_MODES, type PROCESS_MODE } from "../constants/processors";
 import { STORED_DEVICE_NAME, STORED_FORMAT_NAME, STORED_MODEL_NAME, STORED_QUALITY_NAME, STORED_TYPE_NAME } from "../constants/storedValues";
 import { DEVICES, FORMATS, MODELS, TYPES, type DEVICE_TYPES, type FORMAT_TYPES, type MODEL_TYPES } from "../constants/types";
 import { useModal } from "../context/ModalContext";
 import { checkWebGPUSupport } from '../utils/checkWebGPUSupport';
 import { getBaseConfig } from '../utils/getBaseConfig';
+import { useGlobalPaste } from '../hooks/useGlobalPaste';
 
 interface ProcessingState {
   isProcessing: boolean;
   progress: number;
   stage: string;
-}
+};
 
 interface ProcessingConfig {
   configuration: Config;
   type: string;
-}
+};
 
 export const ImageProcessor: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
   const [status, setStatus] = useState<ProcessingState>({ isProcessing: false, progress: 0, stage: 'idle' });
   const [file, setFile] = useState<File | undefined>();
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { openModal } = useModal();
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePastedFile = useCallback((file: File) => handleFile(file), []);
+  useGlobalPaste(handlePastedFile)
 
+  const handleFile = async (file: File) => {
     if (!file) return;
     setFile(file);
 
@@ -49,6 +52,38 @@ export const ImageProcessor: React.FC = () => {
     setProcessedImage(null);
     processImage(file);
   };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  }
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only deactive if leaving the parent container, not entering a child node
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) {
+      handleFile(droppedFile);
+    }
+  }
 
   const validateImageSignature = async (file: File): Promise<string | null> => {
     const buffer = await file.slice(0, 12).arrayBuffer();
@@ -84,13 +119,12 @@ export const ImageProcessor: React.FC = () => {
 
     try {
       const targetFunction = PROCESS_MODES[config.type as PROCESS_MODE];
-      const resultBlob = await targetFunction(file, config.configuration);
-      const resultUrl = URL.createObjectURL(resultBlob);
-      setProcessedImage(resultUrl);
+      const blob = await targetFunction(file, config.configuration);
+      setProcessedImage(URL.createObjectURL(blob));
     }
-    catch (error) {
-      console.error('Processing failed:', error);
-      openModal({ title: 'Background removal failed!', message: `${error}` });
+    catch (err: unknown) {
+      console.error('Processing failed:', err);
+      openModal({ title: 'Background removal failed!', message: `${err}` });
     }
     finally {
       setStatus({ isProcessing: false, progress: 100, stage: 'complete' });
@@ -127,6 +161,7 @@ export const ImageProcessor: React.FC = () => {
     const storedDevice = localStorage.getItem(STORED_DEVICE_NAME);
     if (storedDevice && DEVICES.has(storedDevice)) {
       config.configuration.device = await checkWebGPUSupport() ? storedDevice as DEVICE_TYPES : 'cpu';
+      config.configuration.proxyToWorker = config.configuration.device !== 'gpu';
     }
       
     const storedQuality = localStorage.getItem(STORED_QUALITY_NAME);
@@ -157,91 +192,121 @@ export const ImageProcessor: React.FC = () => {
   };
 
   return (
-    <main className="max-w-4xl w-flex flex-col items-center gap-6">
+    <main className="flex flex-col items-center justify-center max-w-3xl w-full mx-auto px-2">
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileChange}
         accept=".png, .jpg, .jpeg, .webp"
         className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            handleFile(e.target.files[0]);
+            e.target.value = ''; // Reset input so selecting the same file again triggers onChange
+          }
+        }}
       />
 
-      <div className="text-center">
-        <button 
-          onClick={() => fileInputRef.current?.click()} 
-          disabled={status.isProcessing} 
-          className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+      {!originalImage ? (
+        /* Initial Empty Dropzone */
+        <div
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`w-full border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+            isDragging
+              ? 'border-white bg-neutral-800/60'
+              : 'border-neutral-700 hover:border-neutral-500 bg-neutral-900/40'
+          }`}
         >
-          <img src={uploadImg} alt="Upload" className="w-5 h-5"/>
-          <span>{status.isProcessing ? 'Processing...' : 'Upload Image'}</span>
-        </button>
-        {originalImage && (
-          <button
-            onClick={() => { if (file) processImage(file) }}
-            disabled={status.isProcessing}
-            className="inline-flex items-center gap-1 ms-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-          >
-            <img src={processImg} alt="Process" className="w-5 h-5"/>
-            <span>Process Again</span>
-          </button>
-        )}
-      </div>
-
-      {status.isProcessing && (
-        <div className="flex-grow bg-neutral-800 p-4 mt-4 rounded-lg border border-neutral-700 ">
-          <div className="flex justify-between text-xs text-neutral-400 mb-1">
-            <span>{status.stage}</span>
-            <span>{status.progress}%</span>
-          </div>
-          <div className="w-full bg-neutral-700 h-2 rounded-full overflow-hidden">
-            <div className={`bg-blue-500 h-full transition-all duration-150 w-[${status.progress}%]`}/>
-          </div>
+          <p className="text-sm font-medium pointer-events-none">
+            Click, drag & drop, or press Ctrl+V to paste
+          </p>
         </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-4">
-        <div className="flex flex-col items-center border border-neutral-800 rounded-lg p-4 bg-neutral-950">
-          <h2 className="text-sm font-semibold text-neutral-400 mb-3">Original</h2>
-          <div className="w-full h-80 flex items-center justify-center bg-neutral-900 rounded overflow-hidden">
-            {originalImage ? (
-              <img
-                src={originalImage}
-                alt="Original"
-                className="max-h-full max-w-full object-contain"
-              />
-            ) : (
-              <span className="text-neutral-600 text-xs">No image selected</span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center border border-neutral-800 rounded-lg p-4 bg-neutral-950">
-          <h2 className=" text-sm font-semibold text-neutral-400 mb-3">Processed Result</h2>
-          <div id="divProcessedResult" className="w-full h-80 flex items-center justify-center rounded overflow-hidden">
-            {processedImage ? (
-              <img
-                src={processedImage}
-                alt="Background removed"
-                className="max-h-full max-w-full object-contain"
-              />
-            ) : (
-              <span className="text-neutral-600 text-xs">
-                {status.isProcessing ? 'Removing background...' : 'Awaiting input'}
-              </span>
-            )}
-          </div>
-
-          {processedImage && (
-            <button
-              onClick={handleDownload}
-              className="inline-flex items-center gap-1 mt-4 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium transition-colors"
+      ) : (
+        /* Active Comparison Workspace */
+        <div className="w-full space-y-6">
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={`min-w-0 border rounded-lg p-4 transition-colors cursor-pointer relative group flex flex-col ${
+                isDragging
+                  ? 'border-white border-dashed bg-neutral-800/50'
+                  : 'border-neutral-800 hover:border-neutral-600 bg-neutral-900/50'
+              }`}
             >
-              <img src={downloadImg} alt="Download" className="w-5 h-5"/>
-              <span>Download Image</span>
-            </button>
+              <div className="flex justify-between items-center mb-2 pointer-events-none">
+                <span className="text-xs text-neutral-400 font-mono">SOURCE</span>
+                <span className="text-[11px] text-neutral-500 font-mono group-hover:text-neutral-300 transition-colors hidden sm:inline">
+                  Replace
+                </span>
+              </div>
+
+              <div className="relative aspect-square w-full bg-neutral-950 rounded overflow-hidden">
+                <img
+                  src={originalImage}
+                  alt="Original"
+                  className={`absolute inset-0 w-full h-full object-contain p-2 pointer-events-none transition-opacity ${isDragging ? 'opacity-30' : 'opacity-100'}`}
+                />
+
+                {/* Drag Overlay Indicator */}
+                {isDragging && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-10 pointer-events-none">   
+                    <img src={uploadImg} alt="Upload" className="h-8 w-8 mb-2"/>
+                    <span className="text-xs font-mono text-white">Drop to replace</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RESULT Container */}
+            <div className="min-w-0 border border-neutral-800 rounded-lg p-4 bg-neutral-900/50 flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-neutral-400 font-mono">RESULT</span>
+              </div>
+
+              <div id="divProcessedResult" className="relative aspect-square w-full rounded overflow-hidden">
+                {status.isProcessing && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950/80">
+                    <p className="text-xs font-mono text-neutral-400">Processing...</p>
+                  </div>
+                )}
+
+                {processedImage && !status.isProcessing && (
+                  <img src={processedImage} alt="Processed" className="absolute inset-0 w-full h-full object-contain p-2"/>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Output buttons */}
+          {processedImage && (
+            <div className="flex justify-center">
+              <button
+                onClick={() => { if (file) processImage(file) }}
+                disabled={status.isProcessing}
+                className="inline-flex items-center gap-1 me-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+              >
+                <img src={processImg} alt="Process" className="w-5 h-5"/>
+                <span>Process Again</span>
+              </button>
+              <button
+                onClick={handleDownload}
+                disabled={status.isProcessing}
+                className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+              >
+                <img src={downloadImg} alt="Download" className="w-5 h-5"/>
+                <span>Download Image</span>
+              </button>
+            </div>
           )}
         </div>
-      </div>
+      )}
     </main>
   );
 }
