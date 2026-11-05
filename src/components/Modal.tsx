@@ -43,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({ title, message, isOpen, onClose })
     >
       <div className="bg-neutral-800 text-neutral-100 rounded-lg w-[90%] max-w-[500px] max-h-[90vh] overflow-y auto shadow-[0_4px_12px_rgba(0,0,0,0.15)] p-6">
         <h2 className="text-xl font-bold">{title}</h2>
-        <p>{message}</p>
+        <p className="whitespace-pre-line text-justify">{message}</p>
         <button
           className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-400 text-white font-bold py-2 px-4 mt-2 rounded"
           onClick={onClose}
