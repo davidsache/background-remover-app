@@ -19,16 +19,10 @@ interface ProcessingConfig {
   type: string;
 }
 
-interface ProcessingState {
-  isProcessing: boolean;
-  progress: number;
-  stage: string;
-}
-
 export const ImageProcessor: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [processedImage, setProcessedImage] = useState<string | null>(null);
-  const [status, setStatus] = useState<ProcessingState>({ isProcessing: false, progress: 0, stage: 'idle' });
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [file, setFile] = useState<File | undefined>();
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [resultMetadata, setResultMetadata] = useState<ImageMetadata | null>(null);
@@ -118,8 +112,8 @@ export const ImageProcessor: React.FC = () => {
   }
   
   const processImage = async (file: File) => {
-    setStatus({ isProcessing: true, progress: 0, stage: 'Initializing engine...' });
     const config = await getConfig();
+    setIsProcessing(true);
     setResultMetadata(null);
 
     try {
@@ -135,7 +129,7 @@ export const ImageProcessor: React.FC = () => {
       openModal({ title: 'Background removal failed!', message: `${err}` });
     }
     finally {
-      setStatus({ isProcessing: false, progress: 100, stage: 'complete' });
+      setIsProcessing(false);
     }
   };
 
@@ -283,7 +277,7 @@ export const ImageProcessor: React.FC = () => {
               </div>
 
               <div id="divProcessedResult" className="relative w-full h-[300px] sm:h-[380px] md:h-[450px] lg:h-[550px] xl:h-[600px] rounded-lg overflow-hidden flex items-center justify-center bg-neutral-950">
-                {status.isProcessing && (
+                {isProcessing && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950/80 backdrop-blur-sm z-10">
                     <p className="text-xs sm:text-sm font-mono text-neutral-400">
                       {t("Processor.processing")}
@@ -291,7 +285,7 @@ export const ImageProcessor: React.FC = () => {
                   </div>
                 )}
 
-                {processedImage && !status.isProcessing && (
+                {processedImage && !isProcessing && (
                   <img 
                     src={processedImage} 
                     alt="Processed image" 
@@ -328,7 +322,7 @@ export const ImageProcessor: React.FC = () => {
               <div className="flex flex-col justify-center sm:flex-row gap-2.5 sm:gap-3 pt-2">
                 <button
                   onClick={() => { if (file) processImage(file) }}
-                  disabled={status.isProcessing}
+                  disabled={isProcessing}
                   className="inline-flex gap-1 px-3 py-2 dark:shadow-none shadow-sm/60 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-white"
                 >
                   <img src={processSvg} alt="Process" className="w-5 h-5"/>
@@ -336,7 +330,7 @@ export const ImageProcessor: React.FC = () => {
                 </button>
                 <button
                   onClick={handleDownload}
-                  disabled={status.isProcessing}
+                  disabled={isProcessing}
                   className="inline-flex gap-1 px-3 py-2 dark:shadow-none shadow-sm/60 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-white"
                 >
                   <img src={downloadSvg} alt="Download" className="w-5 h-5"/>
