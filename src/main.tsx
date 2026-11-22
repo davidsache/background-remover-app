@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
+import './i18n.tsx';
 import * as ort from 'onnxruntime-web';
 import App from './App.tsx';
 

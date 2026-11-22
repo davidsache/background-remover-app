@@ -1,0 +1,47 @@
+{
+  "Header": {
+    "title": "Client-Side Background Remover",
+    "description": "Removing image backgrounds directly in the user's browser (client-side) using modern web technologies (ONNX models and WASM (WebAssembly)."
+  },
+  "Processor": {
+    "instructions": "Click, drag & drop, or press Ctrl+V to paste",
+    "source": "Source",
+    "replace": "Replace",
+    "dropReplace": "Drop to replace",
+    "result": "Result",
+    "processing": "Processing...",
+    "processAgain": "Process Again",
+    "download": "Download Image"
+  },
+  "Settings": {
+    "model": "Model",
+    "modelLarge": "isnet (large)",
+    "modelMedium": "isnet_fp16 (medium)",
+    "modelSmall": "isnet_quint8 (small)",
+    "type": "Type",
+    "typeForeground": "Foreground",
+    "typeBackground": "Background",
+    "typeMask": "Mask",
+    "format": "Format",
+    "device": "Device",
+    "quality": "Quality",
+    "modelInfoTitle": "Model information",
+    "modelInfo": "Selects the quantization level of the IS-Net segmentation model:\n\n• large: Maximum alpha-matte accuracy highest RAM usage and slowest initial download.\n\n• medium: Half-precision weights virtually identical visual output to 'large' at half the download size.\n\n• small: Quantized weights; fastest download and lowest memory footprint, with minor edge artifacts on fine details like hair.",
+    "typeInfoTitle": "Type information",
+    "typeInfo": "Controls which pixel data is written into the output image:\n\n• foreground: Keeps the detected subject and sets background pixels to transparent (alpha = 0).\n\n• background: Inverts the alpha matte, removing the subject (alpha = 0) and keeping only the background pixels.\n\n• mask: Discards RGB color data from the source image and outputs the raw grayscale segmentation map (white for foreground, black for background)",
+    "formatInfoTitle": "Format information",
+    "formatInfo": "Determines the MIME encoding of the returned Blob:\n\n• png: Lossless compression with full alpha channel support.\n\n• webp: Lossy or lossless compression with alpha channel support; produces significantly smaller file sizes than PNG.\n\n• jpeg: Lossy format without alpha support (transparent areas render black).",
+    "deviceInfoTitle": "Device information",
+    "deviceInfo": "Selects the ONNX Runtime execution provider: \n\n• cpu: Executes inference using WebAssembly (wasm).\n\n• gpu: Attempts hardware acceleration via WebGPU. If the user's browser or GPU does not support WebGPU, the library falls back to cpu.",
+    "qualityInfoTitle": "Quality information",
+    "qualityInfo": "Specifies the compression quality ratio passed to the encoder."
+  },
+  "Preload": {
+    "title": "Cache Initialization",
+    "idle": "Pre-warm Model Pipeline",
+    "loading": "Downloading Weight:",
+    "ready": "Models Cached in Browser",
+    "error": "Retry Preload",
+    "failedTitle": "Preload failed"
+  }  
+}

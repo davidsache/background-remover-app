@@ -2,6 +2,7 @@ import { preload, type Config } from "@imgly/background-removal";
 import { useEffect, useRef, useState } from "react";
 import { getBaseConfig } from "../utils/getBaseConfig";
 import { useModal } from "../context/ModalContext";
+import { useTranslation } from "react-i18next";
 
 interface PreloadProps {
   preloadFinished: () => void;
@@ -13,6 +14,7 @@ export const Preload: React.FC<PreloadProps> = ({ preloadFinished }) => {
   const [visible, setVisible] = useState<boolean>(true);
   const hasTriggered = useRef<boolean>(false);
   const { openModal } = useModal();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (hasTriggered.current) return;
@@ -53,22 +55,22 @@ export const Preload: React.FC<PreloadProps> = ({ preloadFinished }) => {
     }
     catch (err) {
       setPreloadStatus('error');
-      openModal({ title: 'Preload failed', message: `${err}` });
-      console.error('Preload failed:', err);
+      openModal({ title: t("Preload.failedTitle"), message: `${err}` });
+      console.error(t("Preload.failedTitle"), err);
     }
   };
   
   return (
     <div className={`flex flex-col text-center overflow-hidden transition-all duration-500 ease-in-out ${visible ? 'opacity-100 max-h-40 mb-4' : 'opacity-0 max-h-0 mb-0 pointer-events-none'}`}>
-      <h2 className="mb-1">Cache Initialization</h2>
+      <h2 className="mb-1 font-bold text-lg">{t("Preload.title")}</h2>
       <p 
-        className={`text-yellow-500 ${preloadStatus === 'error' ? 'underline cursor-pointer hover:text-yellow-300' : ''}`} 
+        className={`dark:text-yellow-500 text-blue-500 font-bold transition-colors ${preloadStatus === 'error' ? 'underline cursor-pointer hover:text-yellow-300' : ''}`} 
         onClick={() => { if (preloadStatus === 'error') handlePreload(); }}
       >
-        {preloadStatus === 'idle' && 'Pre-warm Model Pipeline'}
-        {preloadStatus === 'loading' && `Downloading Weight: ${preloadProgress}%`}
-        {preloadStatus === 'ready' && 'Models Cached in Browser'}
-        {preloadStatus === 'error' && 'Retry Preload'}
+        {preloadStatus === 'idle' && t("Preload.idle")}
+        {preloadStatus === 'loading' && `${t("Preload.loading")} ${preloadProgress}%`}
+        {preloadStatus === 'ready' && t("Preload.ready")}
+        {preloadStatus === 'error' && t("Preload.error")}
       </p>
     </div>    
   );

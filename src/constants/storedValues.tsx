@@ -3,3 +3,4 @@ export const STORED_TYPE_NAME = "bg-remover-type";
 export const STORED_FORMAT_NAME = "bg-remover-format";
 export const STORED_DEVICE_NAME = "bg-remover-device";
 export const STORED_QUALITY_NAME = "bg-remover-quality";
+export const STORED_THEME_NAME = "bg-remover-theme";

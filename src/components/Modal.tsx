@@ -41,7 +41,7 @@ export const Modal: React.FC<ModalProps> = ({ title, message, isOpen, onClose })
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-neutral-800 text-neutral-100 rounded-lg w-[90%] max-w-[500px] max-h-[90vh] overflow-y auto shadow-[0_4px_12px_rgba(0,0,0,0.15)] p-6">
+      <div className="bg-neutral-800 text-neutral-100 border-1 border-neutral-700 rounded-lg w-[90%] max-w-[500px] max-h-[90vh] overflow-y auto shadow-[0_4px_12px_rgba(0,0,0,0.15)] p-6">
         <h2 className="text-xl font-bold">{title}</h2>
         <p className="whitespace-pre-line text-justify">{message}</p>
         <button

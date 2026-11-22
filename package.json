@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@imgly/background-removal": "1.7.0",
+    "i18next": "^26.7.2",
+    "i18next-browser-languagedetector": "^8.3.0",
     "lucide-react": "^1.61.0",
     "onnxruntime-web": "1.21.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-i18next": "^17.1.13"
   },
   "overrides": {
     "onnxruntime-web": "1.21.0"

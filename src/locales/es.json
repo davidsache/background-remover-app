@@ -1,0 +1,47 @@
+{
+  "Header": {
+    "title": "Eliminador de fondos (cliente)",
+    "description": "Eliminación de fondos de imágenes directamente en el navegador del usuario (client-side) utilizando tecnologías web modernas (ONNX models y WASM (WebAssembly)."
+  },
+  "Processor": {
+    "instructions": "Haz click, arrastra y suelta, o presiona Ctrl+V para pegar",
+    "source": "Origen",
+    "replace": "Reemplazar",
+    "dropReplace": "Suelta para reemplazar",
+    "result": "Resultado",
+    "processing": "Procesando...",
+    "processAgain": "Procesar de nuevo",
+    "download": "Descargar imagen"
+  },
+  "Settings": {
+    "model": "Modelo",
+    "modelLarge": "isnet (grande)",
+    "modelMedium": "isnet_fp16 (medio)",
+    "modelSmall": "isnet_quint8 (pequeño)",
+    "type": "Tipo",
+    "typeForeground": "Primer plano",
+    "typeBackground": "Fondo",
+    "typeMask": "Máscara",
+    "format": "Formato",
+    "device": "Dispositivo",
+    "quality": "Calidad",
+    "modelInfoTitle": "Información sobre Modelo",
+    "modelInfo": "Selecciona el nivel de cuantización del modelo de segmentación IS-Net:\n\n• grande (large): Máxima precisión en el «alpha-matte», mayor consumo de RAM y descarga inicial más lenta.\n\n• medio (medium): Pesos en precisión media; resultado visual prácticamente idéntico al de la opción «large», pero con la mitad del tamaño de descarga.\n\n• pequeño (small): Pesos cuantizados; descarga más rápida y menor consumo de memoria, con ligeros artefactos en los bordes en detalles finos, como el cabello.",
+    "typeInfoTitle": "Información sobre Tipo",
+    "typeInfo": "Controla qué datos de píxeles se escriben en la imagen de salida:\n\n• primer plano (foreground): Conserva el sujeto detectado y establece los píxeles del fondo como transparentes (alfa = 0).\n\nfondo (background): Invierte el mate alfa, eliminando el sujeto (alfa = 0) y conservando únicamente los píxeles del fondo.\n\n• máscara (mask): Descarta los datos de color RGB de la imagen de origen y genera el mapa de segmentación en escala de grises (blanco para el primer plano, negro para el fondo).",
+    "formatInfoTitle": "Información sobre Formato",
+    "formatInfo": "Determina la codificación MIME del objeto Blob resultante:\n\n• png: Compresión sin pérdida con compatibilidad total para el canal alfa.\n\n• webp: Compresión con o sin pérdida, con compatibilidad para el canal alfa; genera archivos de un tamaño significativamente menor que el formato PNG.\n\n• jpeg: Formato con pérdida y sin compatibilidad para el canal alfa (las áreas transparentes se muestran en color negro).",
+    "deviceInfoTitle": "Información sobre Dispositivo",
+    "deviceInfo": "Selecciona el proveedor de ejecución de ONNX Runtime:\n\n• cpu: Ejecuta la inferencia mediante WebAssembly (wasm).\n\n• gpu: Intenta realizar la aceleración por hardware a través de WebGPU. Si el navegador o la GPU del usuario no son compatibles con WebGPU, la biblioteca recurre a la opción cpu.",
+    "qualityInfoTitle": "Información sobre Calidad",
+    "qualityInfo": "Especifica la relación de calidad de compresión que se pasa al codificador."
+  },
+  "Preload": {
+    "title": "Inicialización de caché",
+    "idle": "Precalentando el pipeline del modelo",
+    "loading": "Descargando peso:",
+    "ready": "Modelos almacenados en la caché del navegador",
+    "error": "Reintentar precarga",
+    "failedTitle": "Precarga fallada"
+  }
+}

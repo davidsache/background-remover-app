@@ -12,6 +12,7 @@ import { getBaseConfig } from '../utils/getBaseConfig';
 import { useGlobalPaste } from '../hooks/useGlobalPaste';
 import type { Config } from '@imgly/background-removal';
 import { getBlobMetadata, type ImageMetadata } from '../utils/imageMetadata';
+import { useTranslation } from 'react-i18next';
 
 interface ProcessingConfig {
   configuration: Config;
@@ -33,6 +34,7 @@ export const ImageProcessor: React.FC = () => {
   const [resultMetadata, setResultMetadata] = useState<ImageMetadata | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { openModal } = useModal();
+  const { t } = useTranslation();
 
   const handlePastedFile = useCallback((file: File) => handleFile(file), []);
   useGlobalPaste(handlePastedFile)
@@ -198,7 +200,7 @@ export const ImageProcessor: React.FC = () => {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center max-w-3xl w-full mx-auto px-2">
+    <main className="mt-10 flex flex-col items-center justify-center max-w-2xl md:max-w-5xl w-full mx-auto">
       <input
         type="file"
         ref={fileInputRef}
@@ -220,71 +222,81 @@ export const ImageProcessor: React.FC = () => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`w-full border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+          className={`w-full min-h-[120px] sm:min-h-[150px] lg:min-h-[250px] border-2 border-dashed rounded-xl p-6 sm:p-12 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
             isDragging
-              ? 'border-white bg-neutral-800/60'
-              : 'border-neutral-700 hover:border-neutral-500 bg-neutral-900/40'
+              ? 'dark:border-white border-dark dark:bg-neutral-800/60 bg-neutral-400/60'
+              : 'border-neutral-700 hover:border-neutral-500 dark:bg-neutral-900/40 bg-neutral-300/40'
           }`}
         >
-          <p className="text-sm font-medium pointer-events-none">
-            Click, drag & drop, or press Ctrl+V to paste
+          <p className="text-sm sm:text-base font-medium pointer-events-none">
+            {t("Processor.instructions")}
           </p>
         </div>
       ) : (
         /* Active Comparison Workspace */
-        <div className="w-full space-y-6">
-          <div className="grid grid-cols-2 gap-4 w-full">
+        <div className="w-full space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 w-full">
             <div
               onDragOver={handleDragOver}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`min-w-0 border rounded-lg p-4 transition-colors cursor-pointer relative group flex flex-col ${
+              className={`min-w-0 border rounded-xl p-3 sm:p-4 transition-colors cursor-pointer relative group flex flex-col ${
                 isDragging
-                  ? 'border-white border-dashed bg-neutral-800/50'
-                  : 'border-neutral-800 hover:border-neutral-600 bg-neutral-900/50'
+                  ? 'border-white border-dashed dark:bg-neutral-900/30 bg-neutral-400/50'
+                  : 'dark:border-neutral-800 border-neutral-500 hover:border-neutral-600 dark:bg-neutral-950/30 bg-neutral-300/50'
               }`}
             >
-              <div className="flex justify-between items-center mb-2 pointer-events-none">
-                <span className="text-xs text-neutral-400 font-mono">SOURCE</span>
-                <span className="text-[11px] text-neutral-500 font-mono group-hover:text-neutral-300 transition-colors hidden sm:inline">
-                  Replace
+              <div className="flex justify-between items-center mb-2 sm:mb-3 pointer-events-none gap-2">
+                <span className="text-xs dark:text-neutral-400 font-mono tracking-wider">
+                  {t("Processor.source")}
+                </span>
+                <span className="text-[11px] text-neutral-500 font-mono group-hover:text-neutral-700 transition-colors truncate">
+                  {t("Processor.replace")}
                 </span>
               </div>
 
-              <div className="relative aspect-square w-full bg-neutral-950 rounded overflow-hidden">
+              <div className="relative w-full h-[300px] sm:h-[380px] md:h-[450px] lg:h-[550px] xl:h-[600px] bg-neutral-950 rounded-lg overflow-hidden flex items-center justify-center">
                 <img
                   src={originalImage}
                   alt="Original"
-                  className={`absolute inset-0 w-full h-full object-contain p-2 pointer-events-none transition-opacity ${isDragging ? 'opacity-30' : 'opacity-100'}`}
+                  className={`max-h-full max-w-full object-contain p-2 sm:p-4 pointer-events-none transition-opacity duration-200 ${isDragging ? 'opacity-25' : 'opacity-100'}`}
                 />
 
                 {/* Drag Overlay Indicator */}
                 {isDragging && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-10 pointer-events-none">   
-                    <img src={uploadSvg} alt="Upload" className="h-8 w-8 mb-2"/>
-                    <span className="text-xs font-mono text-white">Drop to replace</span>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-10 pointer-events-none">   
+                    <img src={uploadSvg} alt="Upload" className="h-8 w-8 mb-2 animate-bounce"/>
+                    <span className="text-xs font-mono text-white">{t("Processor.dropReplace")}</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* RESULT Container */}
-            <div className="min-w-0 border border-neutral-800 rounded-lg p-4 bg-neutral-900/50 flex flex-col">
+            <div className="min-w-0 border dark:border-neutral-800 border-neutral-500 rounded-xl p-3 sm:p-4 transition-colors dark:bg-neutral-950/30 bg-neutral-300/50 flex flex-col">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-neutral-400 font-mono">RESULT</span>
+                <span className="text-xs dark:text-neutral-400 font-mono tracking-wider">
+                  {t("Processor.result")}
+                </span>
               </div>
 
-              <div id="divProcessedResult" className="relative aspect-square w-full rounded overflow-hidden">
+              <div id="divProcessedResult" className="relative w-full h-[300px] sm:h-[380px] md:h-[450px] lg:h-[550px] xl:h-[600px] rounded-lg overflow-hidden flex items-center justify-center bg-neutral-950">
                 {status.isProcessing && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950/80">
-                    <p className="text-xs font-mono text-neutral-400">Processing...</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950/80 backdrop-blur-sm z-10">
+                    <p className="text-xs sm:text-sm font-mono text-neutral-400">
+                      {t("Processor.processing")}
+                    </p>
                   </div>
                 )}
 
                 {processedImage && !status.isProcessing && (
-                  <img src={processedImage} alt="Processed" className="absolute inset-0 w-full h-full object-contain p-2"/>
+                  <img 
+                    src={processedImage} 
+                    alt="Processed image" 
+                    className="max-h-full max-w-full object-contain p-2 sm:p-4"
+                  />
                 )}
               </div>
             </div>
@@ -295,38 +307,40 @@ export const ImageProcessor: React.FC = () => {
             <>
               {resultMetadata && (
                 <div className="flex justify-center items-center mb-3">
-                  <span className="text-xs text-neutral-400 font-mono tracking-wider me-2">
-                    RESULT:
+                  <span className="text-xs dark:text-neutral-400 font-mono tracking-wider me-2">
+                    {t("Processor.result").toUpperCase()}:
                   </span>
-                  <div className="flex gap-2 text-xs font-mono text-neutral-400">
-                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded text-neutral-200">
+
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-neutral-400">
+                    <span className="px-1.5 py-0.5 dark:shadow-none shadow-sm/30 dark:bg-neutral-800 dark:text-neutral-200 bg-neutral-300 text-neutral-600 rounded transition-colors">
                       {resultMetadata.format}
                     </span>
-                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded">
+                    <span className="px-1.5 py-0.5 dark:shadow-none shadow-sm/30 dark:bg-neutral-800 dark:text-neutral-200 bg-neutral-300 text-neutral-600 rounded transition-colors">
                       {resultMetadata.width} x {resultMetadata.height}
                     </span>
-                    <span className="px-1.5 py-0.5 bg-neutral-800 rounded">
+                    <span className="px-1.5 py-0.5 dark:shadow-none shadow-sm/30 dark:bg-neutral-800 dark:text-neutral-200 bg-neutral-300 text-neutral-600 rounded transition-colors">
                       {resultMetadata.sizeFormatted}
                     </span>
                   </div>
                 </div>
               )}
-              <div className="flex justify-center">
+
+              <div className="flex flex-col justify-center sm:flex-row gap-2.5 sm:gap-3 pt-2">
                 <button
                   onClick={() => { if (file) processImage(file) }}
                   disabled={status.isProcessing}
-                  className="inline-flex items-center gap-1 me-2 px-3 py-2 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex gap-1 px-3 py-2 dark:shadow-none shadow-sm/60 bg-green-600 hover:bg-green-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-white"
                 >
                   <img src={processSvg} alt="Process" className="w-5 h-5"/>
-                  <span>Process Again</span>
+                  <span>{t("Processor.processAgain")}</span>
                 </button>
                 <button
                   onClick={handleDownload}
                   disabled={status.isProcessing}
-                  className="inline-flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+                  className="inline-flex gap-1 px-3 py-2 dark:shadow-none shadow-sm/60 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-white"
                 >
                   <img src={downloadSvg} alt="Download" className="w-5 h-5"/>
-                  <span>Download Image</span>
+                  <span>{t("Processor.download")}</span>
                 </button>
               </div>
             </>
