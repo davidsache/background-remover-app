@@ -11,7 +11,12 @@
     "result": "Result",
     "processing": "Processing...",
     "processAgain": "Process Again",
-    "download": "Download Image"
+    "download": "Download Image",
+    "restart": "Restart processor",
+    "processingErrorTitle": "Processing failed:",
+    "removalFailedTitle": "{{type}} removal failed!",
+    "alertTitle": "Alert!",
+    "imageTypeError": "Selected file must be a valid image (.png, .jpeg or .webp)."
   },
   "Settings": {
     "model": "Model",

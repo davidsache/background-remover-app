@@ -1,6 +1,7 @@
 import uploadSvg from '../assets/upload.svg';
 import downloadSvg from '../assets/download.svg';
 import processSvg from '../assets/process.svg';
+import restartSvg from '../assets/restart.svg';
 
 import { useCallback, useRef, useState } from "react";
 import { PROCESS_MODES, type PROCESS_MODE } from "../constants/processors";
@@ -38,7 +39,7 @@ export const ImageProcessor: React.FC = () => {
     setFile(file);
 
     if (!await validateImageSignature(file)) {
-      openModal({ title: 'Alert!', message: 'Selected file must be an image (.png, .jpeg or .webp).' });
+      openModal({ title: t("Processor.alertTitle"), message: t("Processor.imageTypeError") });
       return;
     }
 
@@ -83,6 +84,10 @@ export const ImageProcessor: React.FC = () => {
     }
   }
 
+  const handleRestart = () => {
+    window.location.reload();
+  }
+
   const validateImageSignature = async (file: File): Promise<string | null> => {
     const buffer = await file.slice(0, 12).arrayBuffer();
     const bytes = new Uint8Array(buffer);
@@ -125,13 +130,25 @@ export const ImageProcessor: React.FC = () => {
       setProcessedImage(URL.createObjectURL(blob));
     }
     catch (err: unknown) {
-      console.error('Processing failed:', err);
-      openModal({ title: 'Background removal failed!', message: `${err}` });
+      console.error(t("Processor.processingErrorTitle"), err);
+      openModal({
+        title: t("Processor.removalFailedTitle", { type: getRemovalType() }), 
+        message: `${err}` 
+      });
     }
     finally {
       setIsProcessing(false);
     }
   };
+
+  const getRemovalType = (): string => {
+    const storedType = localStorage.getItem(STORED_TYPE_NAME);
+    if (storedType && TYPES.has(storedType)) {
+      return t(`Settings.type${storedType.charAt(0).toUpperCase() + storedType.slice(1)}`)
+    }
+
+    return t("Settings.typeBackground");
+  }
 
   const getConfig = async (): Promise<ProcessingConfig> => {
     const config: ProcessingConfig = {
@@ -320,6 +337,14 @@ export const ImageProcessor: React.FC = () => {
               )}
 
               <div className="flex flex-col justify-center sm:flex-row gap-2.5 sm:gap-3 pt-2">
+                <button
+                  onClick={handleRestart}
+                  disabled={isProcessing}
+                  className="inline-flex gap-1 px-3 py-2 dark:shadow-none shadow-sm/60 bg-red-600 hover:bg-red-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors text-white"
+                >
+                  <img src={restartSvg} alt="Restart" className="w-5 h-5"/>
+                  <span>{t("Processor.restart")}</span>
+                </button>
                 <button
                   onClick={() => { if (file) processImage(file) }}
                   disabled={isProcessing}
