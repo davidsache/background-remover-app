@@ -7,6 +7,11 @@ export interface ImageMetadata {
   height: string;
 }
 
+/**
+ * Returns the formatted bytes e.g: 182000 bytes would return as 182 KB.
+ * @param bytes Number of bytes.
+ * @returns String with the formatted bytes.
+ */
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 bytes';
   const k = 1024;
@@ -15,6 +20,11 @@ const formatBytes = (bytes: number): string => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
+/**
+ * Returns the metadata of the passed image blob.
+ * @param blob Image blob.
+ * @returns Object with the metadata of the image.
+ */
 export const getBlobMetadata = async (blob: Blob): Promise<ImageMetadata> => {
   // Decode image header in memory to read pixel dimensions
   const bitmap = await createImageBitmap(blob);

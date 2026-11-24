@@ -88,6 +88,11 @@ export const ImageProcessor: React.FC = () => {
     window.location.reload();
   }
 
+  /**
+   * Checks wheter the passed file is a valid image type or not.
+   * @param file File to check.
+   * @returns The type of image the file is, or null otherwise.
+   */
   const validateImageSignature = async (file: File): Promise<string | null> => {
     const buffer = await file.slice(0, 12).arrayBuffer();
     const bytes = new Uint8Array(buffer);

@@ -1,5 +1,9 @@
 import { useEffect } from "react";
 
+/**
+ * Allows images pasting.
+ * @param onImageReceived Received image. 
+ */
 export function useGlobalPaste(onImageReceived: (file: File) => void) {
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
