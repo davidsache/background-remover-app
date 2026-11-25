@@ -9,4 +9,4 @@ eliminating the need for remote API calls, backend servers, or data transmission
 - **WASM Acceleration:** Multi-threaded neural network inference via `@imgly/background-removal`.
 - **Zero Configuration:** Drag-and-drop interface with real-time inference progress tracking.
 - **Export Capabilities:** Direct PNG export with preserved alpha channel transparency.
-- **Stack:** React 18, Vite, Tailwind CSS, Lucide Icons.
+- **Stack:** React 18, Vite, Tailwind CSS, Google Icons.
